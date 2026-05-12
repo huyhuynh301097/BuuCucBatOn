@@ -15,10 +15,11 @@
             --info: #00A3FF; --neon: 0 0 15px rgba(255, 107, 0, 0.4);
         }
         * { box-sizing: border-box; }
-        body { background: var(--bg); color: var(--text); font-family: 'JetBrains Mono', monospace; margin: 0; padding: 15px; font-size: 13px; }
+        body { background: var(--bg); color: var(--text); font-family: 'JetBrains Mono', monospace; margin: 0; padding: 15px; font-size: 13px; overflow-x: hidden; }
         h3, .logo { font-family: 'Space Grotesk', sans-serif; text-transform: uppercase; letter-spacing: 1px; }
-        .nav { display: flex; justify-content: space-between; align-items: center; background: var(--card); padding: 12px 20px; border: 1px solid var(--brd); border-radius: 4px; margin-bottom: 15px; box-shadow: var(--neon); }
+        .nav { display: flex; justify-content: space-between; align-items: center; background: var(--card); padding: 12px 20px; border: 1px solid var(--brd); border-radius: 4px; margin-bottom: 15px; box-shadow: var(--neon); flex-wrap: wrap; gap: 15px; }
         .logo { font-size: 22px; color: var(--ghn); font-weight: 800; }
+        .filters { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
         .kpi-s { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin-bottom: 20px; }
         .kpi { background: var(--card); padding: 18px; border: 1px solid var(--brd); border-left: 4px solid var(--ghn); position: relative; }
         .kpi span { font-size: 10px; color: var(--dim); font-weight: 700; }
@@ -28,6 +29,7 @@
         .dod.down { color: var(--err); }
         .dod.neutral { color: var(--dim); }
         .grid { display: grid; grid-template-columns: 480px 1fr; gap: 15px; }
+        .col-l, .col-r { min-width: 0; }
         .panel { background: var(--card); border: 1px solid var(--brd); padding: 15px; border-radius: 2px; }
         .chart { height: 260px; position: relative; margin-top: 10px; }
         .table-w { max-height: 600px; overflow: auto; border: 1px solid var(--brd); background: #000; }
@@ -43,13 +45,34 @@
         select, input { background: #000; color: var(--ghn); border: 1px solid var(--brd); padding: 5px 10px; border-radius: 2px; font-family: inherit; font-size: 11px; outline: none; }
         .toast { position: fixed; bottom: 20px; right: 20px; padding: 10px 20px; background: #000; color: var(--ghn); border: 1px solid var(--ghn); transform: translateX(200%); transition: 0.3s; z-index: 999; }
         .toast.show { transform: translateX(0); }
+
+        /* Responsive Adjustments */
+        @media (max-width: 1400px) {
+            .grid { grid-template-columns: 1fr; }
+            .col-l { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+            .col-l .panel:last-child { margin-top: 0 !important; }
+        }
+
+        @media (max-width: 1024px) {
+            .kpi-s { grid-template-columns: repeat(2, 1fr); }
+        }
+
+        @media (max-width: 768px) {
+            .nav { flex-direction: column; align-items: stretch; }
+            .filters { justify-content: space-between; }
+            .filters select, .filters input { flex: 1; min-width: 120px; }
+            .col-l { grid-template-columns: 1fr; }
+            .kpi-s { grid-template-columns: 1fr; }
+            .logo { text-align: center; font-size: 18px; }
+        }
+
     </style>
 </head>
 <body>
     <div class="app-container">
         <div class="nav">
             <div class="logo">GHN OPERATIONAL OS</div>
-            <div style="display:flex; gap:10px; align-items:center;">
+            <div class="filters">
                 <select id="date-f"></select>
                 <select id="type-f"><option value="All">WAREHOUSE: ALL</option></select>
                 <select id="region-f"><option value="All">REGION: GLOBAL</option></select>
