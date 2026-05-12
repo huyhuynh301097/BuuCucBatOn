@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GHN | Operational Stability Dashboard</title>
+    <script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-chart-treemap@2.3.0/dist/chartjs-chart-treemap.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Space+Grotesk:wght@500;700;900&family=Outfit:wght@800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --ghn: #FF6B00; --bg: #030303; --card: #0D0D0D; --brd: #1A1A1A;
+            --text: #E0E0E0; --dim: #555; --ok: #00FF94; --err: #FF3131; --warn: #FFD700;
+            --info: #00A3FF; --neon: 0 0 15px rgba(255, 107, 0, 0.4);
+        }
+        * { box-sizing: border-box; }
+        body { background: var(--bg); color: var(--text); font-family: 'JetBrains Mono', monospace; margin: 0; padding: 15px; font-size: 13px; }
+        h3, .logo { font-family: 'Space Grotesk', sans-serif; text-transform: uppercase; letter-spacing: 1px; }
+        .nav { display: flex; justify-content: space-between; align-items: center; background: var(--card); padding: 12px 20px; border: 1px solid var(--brd); border-radius: 4px; margin-bottom: 15px; box-shadow: var(--neon); }
+        .logo { font-size: 22px; color: var(--ghn); font-weight: 800; }
+        .kpi-s { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin-bottom: 20px; }
+        .kpi { background: var(--card); padding: 18px; border: 1px solid var(--brd); border-left: 4px solid var(--ghn); position: relative; }
+        .kpi span { font-size: 10px; color: var(--dim); font-weight: 700; }
+        .kpi b { font-size: 28px; display: block; margin-top: 5px; color: #FFF; text-shadow: var(--neon); }
+        .kpi .dod { font-size: 11px; font-weight: 700; margin-top: 8px; display: flex; align-items: center; gap: 4px; }
+        .dod.up { color: var(--ok); }
+        .dod.down { color: var(--err); }
+        .dod.neutral { color: var(--dim); }
+        .grid { display: grid; grid-template-columns: 480px 1fr; gap: 15px; }
+        .panel { background: var(--card); border: 1px solid var(--brd); padding: 15px; border-radius: 2px; }
+        .chart { height: 260px; position: relative; margin-top: 10px; }
+        .table-w { max-height: 600px; overflow: auto; border: 1px solid var(--brd); background: #000; }
+        table { width: 100%; border-collapse: collapse; font-size: 11px; white-space: nowrap; }
+        th { text-align: left; padding: 12px; background: #0A0A0A; color: var(--ghn); position: sticky; top: 0; z-index: 100; border-bottom: 1px solid var(--brd); text-transform: uppercase; font-size: 9px; }
+        td { padding: 10px 12px; border-bottom: 1px solid #111; color: #AAA; }
+        tr:hover td { background: #0F0F0F; color: #FFF; }
+        td:first-child, th:first-child { position: sticky; left: 0; background: #0D0D0D; z-index: 20; border-right: 1px solid var(--brd); color: var(--ghn); font-weight: 700; }
+        .pill { padding: 2px 6px; border-radius: 2px; font-weight: 700; font-size: 9px; border: 1px solid currentColor; }
+        .p-ok { color: var(--ok); background: rgba(0,255,148,0.05); }
+        .p-err { color: var(--err); background: rgba(255,49,49,0.05); }
+        .p-warn { color: var(--warn); background: rgba(255,215,0,0.05); }
+        select, input { background: #000; color: var(--ghn); border: 1px solid var(--brd); padding: 5px 10px; border-radius: 2px; font-family: inherit; font-size: 11px; outline: none; }
+        .toast { position: fixed; bottom: 20px; right: 20px; padding: 10px 20px; background: #000; color: var(--ghn); border: 1px solid var(--ghn); transform: translateX(200%); transition: 0.3s; z-index: 999; }
+        .toast.show { transform: translateX(0); }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <div class="nav">
+            <div class="logo">GHN OPERATIONAL OS</div>
+            <div style="display:flex; gap:10px; align-items:center;">
+                <select id="date-f"></select>
+                <select id="type-f"><option value="All">WAREHOUSE: ALL</option></select>
+                <select id="region-f"><option value="All">REGION: GLOBAL</option></select>
+                <input type="text" id="search-po" placeholder="SYSTEM SEARCH...">
+                <button onclick="load()" style="background:var(--ghn); border:none; padding:6px 12px; cursor:pointer; font-weight:700; font-family:inherit;">SYNC</button>
+            </div>
+        </div>
+        <div class="kpi-s">
+            <div class="kpi"><span>NETWORK HEALTH</span><b id="k-health">--%</b><div id="d-health" class="dod"></div></div>
+            <div class="kpi" style="border-left-color:var(--err)"><span>CRITICAL UNITS</span><b id="k-un">0</b><div id="d-un" class="dod"></div></div>
+            <div class="kpi" style="border-left-color:var(--warn)"><span>AGING > 5 NGÀY VOL</span><b id="k-ag">0</b><div id="d-ag" class="dod"></div></div>
+            <div class="kpi" style="border-left-color:var(--info)"><span>CLEARANCE SPEED</span><b id="k-cl">0D</b><div id="d-cl" class="dod"></div></div>
+        </div>
+        <div class="grid">
+            <div class="col-l">
+                <div class="panel"><h3 style="font-size:12px; margin:0; color:var(--ghn)">BACKLOG VS CLEARANCE MAP</h3><div class="chart"><canvas id="c-scatter"></canvas></div></div>
+                <div class="panel" style="margin-top:15px;"><h3 style="font-size:12px; margin:0; color:var(--ghn)">GRADIENT ROOT CAUSES</h3><div class="chart"><canvas id="c-tree"></canvas></div></div>
+            </div>
+            <div class="col-r">
+                <div class="panel" style="padding: 0;"><div style="padding:15px; border-bottom:1px solid var(--brd);"><h3 style="font-size:12px; margin:0; color:var(--ghn)">MASTER PERFORMANCE DATA</h3></div><div class="table-w"><table id="t-main"><thead><tr><th>UNIT NAME</th><th>STATUS</th><th>RISK</th><th>BL LM</th><th>AGING > 5 NGÀY</th><th>% AGING</th><th>BL KTC</th><th>KTC PROV</th><th>% KTC P</th><th>CREATE N1</th><th>CREATE AV</th><th>DELIV N1</th><th>DELIV AV</th><th>DELIV MX</th><th>CLEAR D</th><th>REASON</th></tr></thead><tbody></tbody></table></div></div>
+            </div>
+        </div>
+    </div>
+    <div id="toast" class="toast"></div>
+    <script>
+        const SOURCE = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSOZ7OjPNKAkocRDwAWYgkRfyo-hgtECdyRHclhG8nXrTJ3iw_wYb2lzAsL4-KV2rt1lMJggpXag-U8/pub?gid=1824762908&single=true&output=csv';
+        const PROXY = url => `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(url + '&t=' + Date.now())}`;
+        let rawData = [], charts = {};
+        async function load() {
+            showToast('SYSTEM CONNECTING...');
+            try {
+                const response = await fetch(PROXY(SOURCE));
+                const text = await response.text();
+                parseData(text);
+                showToast('CONNECTION ESTABLISHED', 'success');
+            } catch (e) { showToast('CONNECTION FAILED', 'danger'); }
+        }
+        function parseData(text) {
+            const parsed = d3.csvParse(text.trim());
+            const latest = new Map();
+            parsed.forEach(d => {
+                const date = (d.ngay || d.update_time || '').split(' ')[0].replace(/\//g, '-');
+                const key = `${date}_${d.kho_giao_id}`;
+                if (!latest.has(key)) latest.set(key, d);
+                d.dateStr = date;
+            });
+            rawData = Array.from(latest.values());
+            if (!document.getElementById('date-f').options.length) {
+                const dates = [...new Set(rawData.map(d => d.dateStr))].sort().reverse();
+                dates.forEach(dt => document.getElementById('date-f').add(new Option(dt, dt)));
+                const regions = [...new Set(rawData.map(d => d.vung_giao))].sort();
+                regions.forEach(r => document.getElementById('region-f').add(new Option(r, r)));
+                const types = [...new Set(rawData.map(d => d.warehouse_type))].sort();
+                types.forEach(t => document.getElementById('type-f').add(new Option(t, t)));
+                document.getElementById('date-f').onchange = document.getElementById('region-f').onchange = document.getElementById('type-f').onchange = render;
+                document.getElementById('search-po').oninput = render;
+            }
+            render();
+        }
+        function render() {
+            const date = document.getElementById('date-f').value, region = document.getElementById('region-f').value, type = document.getElementById('type-f').value, search = document.getElementById('search-po').value.toLowerCase();
+            const filtered = rawData.filter(d => d.dateStr === date && (region === 'All' || d.vung_giao === region) && (type === 'All' || d.warehouse_type === type) && (d.kho_giao_name || '').toLowerCase().includes(search));
+            
+            // DoD Logic
+            const dates = [...new Set(rawData.map(d => d.dateStr))].sort();
+            const prevDate = dates[dates.indexOf(date) - 1];
+            const prevData = prevDate ? rawData.filter(d => d.dateStr === prevDate && (region === 'All' || d.vung_giao === region) && (type === 'All' || d.warehouse_type === type)) : null;
+
+            filtered.forEach(d => {
+                d.bl_lm = Math.round(+(d['BL LM'] || 0)); d.bl_aging = Math.round(+(d['BL LM >5 ngay'] || 0));
+                d.bl_ktc = Math.round(+(d['BL KTC'] || 0)); d.clearance = Math.round(+(d.du_kien_clear_ton || 0));
+                d.gtc_avg = Math.round(+(d.gtc_avg_7ngay || 0));
+                d.risk = Math.min((d.clearance * 20) + (d.tinh_hinh === 'Bất ổn' ? 30 : 0) + (d.bl_aging > 0 ? 20 : 0), 100);
+            });
+
+            const un = filtered.filter(d => d.tinh_hinh === 'Bất ổn');
+            const health = Math.round(100 - (un.length / (filtered.length || 1) * 100));
+            const aging = d3.sum(filtered, d => d.bl_aging);
+            // Chỉ tính Clearance cho bưu cục đang "bể" (Bất ổn)
+            const clearance = Math.round(d3.mean(un, d => d.clearance) || 0);
+
+            document.getElementById('k-health').textContent = health + '%';
+            document.getElementById('k-un').textContent = un.length;
+            document.getElementById('k-ag').textContent = aging.toLocaleString();
+            document.getElementById('k-cl').textContent = clearance + 'D';
+
+            if (prevData) {
+                const pUn = prevData.filter(d => d.tinh_hinh === 'Bất ổn');
+                const pHealth = Math.round(100 - (pUn.length / (prevData.length || 1) * 100));
+                const pAging = d3.sum(prevData, d => d.bl_aging);
+                const pClearance = Math.round(d3.mean(pUn, d => d.clearance) || 0);
+                
+                updateDoD('d-health', health - pHealth, pHealth, true);
+                updateDoD('d-un', un.length - pUn.length, pUn.length, false);
+                updateDoD('d-ag', aging - pAging, pAging, false);
+                updateDoD('d-cl', clearance - pClearance, pClearance, false);
+            } else {
+                ['d-health','d-un','d-ag','d-cl'].forEach(id => document.getElementById(id).innerHTML = '');
+            }
+
+            drawCharts(filtered);
+            const tbody = document.querySelector('#t-main tbody');
+            tbody.innerHTML = '';
+            filtered.sort((a,b) => b.risk - a.risk).forEach(d => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `<td>${d.kho_giao_name}</td><td><span class="pill ${d.tinh_hinh === 'Bất ổn' ? 'p-err' : 'p-ok'}">${d.tinh_hinh}</span></td><td><b style="color:${d.risk > 70 ? 'var(--err)' : 'var(--ok)'}">${Math.round(d.risk)}</b></td><td>${d.bl_lm.toLocaleString()}</td><td style="color:var(--err)">${d.bl_aging.toLocaleString()}</td><td style="color:#FFF">${(+(d['%BL LM >5 ngay'] || 0) * 100).toFixed(1)}%</td><td>${d.bl_ktc.toLocaleString()}</td><td>${Math.round(+(d['BL KTC cung tinh'] || 0)).toLocaleString()}</td><td style="color:#FFF">${(+(d['%BL KTC cung tinh'] || 0) * 100).toFixed(1)}%</td><td>${Math.round(+(d.tao_n1 || 0)).toLocaleString()}</td><td>${Math.round(+(d.tao_avg_7ngay || 0)).toLocaleString()}</td><td>${Math.round(+(d.gtc_n1 || 0)).toLocaleString()}</td><td>${Math.round(+(d.gtc_avg_7ngay || 0)).toLocaleString()}</td><td>${Math.round(+(d.gtc_max_7ngay || 0)).toLocaleString()}</td><td style="font-weight:700; color:#FFF">${d.clearance}D</td><td style="font-size:9px">${d.ly_do_bat_on || '-'}</td>`;
+                tbody.appendChild(tr);
+            });
+        }
+        function drawCharts(f) {
+            const ctxS = document.getElementById('c-scatter').getContext('2d');
+            if (charts.s) charts.s.destroy();
+            charts.s = new Chart(ctxS, { type: 'bubble', data: { datasets: [{ data: f.map(d => ({ x: d.bl_lm, y: d.clearance, r: Math.sqrt(d.bl_aging) * 1.5 + 4, name: d.kho_giao_name, aging: d.bl_aging, gtc: d.gtc_avg })), backgroundColor: f.map(d => d.risk > 70 ? 'rgba(255,49,49,0.6)' : 'rgba(255,107,0,0.4)'), borderColor: '#FF6B00' }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, tooltip: { callbacks: { label: (ctx) => [`BC: ${ctx.raw.name}`, `Tồn LM: ${ctx.raw.x}`, `Aging > 5n: ${ctx.raw.aging}`, `GTC L7D: ${ctx.raw.gtc}`, `Clear: ${ctx.raw.y}D`] } } }, scales: { x: { grid: { color: '#111' } }, y: { grid: { color: '#111' } } } } });
+            const ctxT = document.getElementById('c-tree').getContext('2d');
+            if (charts.tree) charts.tree.destroy();
+            const counts = { 'Tồn LM': 0, 'Tồn KTC': 0, 'Tồn Aging > 5 ngày': 0 };
+            f.filter(d => d.tinh_hinh === 'Bất ổn').forEach(d => {
+                const reas = (d.ly_do_bat_on || '').toLowerCase();
+                if (reas.includes('lm')) counts['Tồn LM']++;
+                if (reas.includes('ktc')) counts['Tồn KTC']++;
+                if (reas.includes('aging')) counts['Tồn Aging > 5 ngày']++;
+            });
+            const treeData = Object.entries(counts).filter(e => e[1] > 0).map(([key, value]) => ({ key, value }));
+            const maxVal = Math.max(...treeData.map(d => d.value));
+            charts.tree = new Chart(ctxT, { type: 'treemap', data: { datasets: [{ tree: treeData, key: 'value', groups: ['key'], spacing: 3, backgroundColor: (ctx) => { const val = ctx.raw?._data?.value || 0; const alpha = 0.3 + (val / (maxVal || 1)) * 0.7; return `rgba(255, 107, 0, ${alpha})`; }, borderColor: '#FF6B00', borderWidth: 1, labels: { display: true, color: '#000', font: { size: 12, weight: '900', family: 'Space Grotesk' }, formatter: ctx => [`${ctx.raw?._data?.key}`, `${ctx.raw?._data?.value} UNITS`] } }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } } });
+        }
+        function showToast(m, t) { const el = document.getElementById('toast'); el.textContent = m; el.className = `toast show ${t || ''}`; setTimeout(() => el.className = 'toast', 4000); }
+        function updateDoD(id, diff, prevVal, isPositiveGood) {
+            const el = document.getElementById(id);
+            if (diff === 0) { el.innerHTML = '● No change'; el.className = 'dod neutral'; return; }
+            const isGood = isPositiveGood ? diff > 0 : diff < 0;
+            const arrow = diff > 0 ? '▲' : '▼';
+            const pct = prevVal > 0 ? Math.round(Math.abs(diff) / prevVal * 100) : 0;
+            const pctText = id === 'd-health' ? `${Math.abs(diff)}%pts` : `${Math.abs(diff)} (${pct}%)`;
+            el.innerHTML = `${arrow} ${pctText} vs prev day`;
+            el.className = `dod ${isGood ? 'up' : 'down'}`;
+        }
+        load();
+        setInterval(load, 300000);
+    </script>
+</body>
+</html>
