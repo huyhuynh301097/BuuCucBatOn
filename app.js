@@ -176,7 +176,7 @@ function renderCharts(data) {
                     y: d.du_kien_clear_ton,
                     r: Math.sqrt(d['BL LM >5 ngay']) * 2 + 2
                 })),
-                backgroundColor: data.map(d => d.riskScore > 60 ? 'rgba(255, 46, 0, 0.6)' : 'rgba(255, 107, 0, 0.4)'),
+                backgroundColor: data.map(d => d.riskScore > 60 ? 'rgba(239, 68, 68, 0.5)' : 'rgba(249, 115, 22, 0.4)'),
                 borderColor: data.map(d => d.riskScore > 60 ? 'var(--danger)' : 'var(--ghn-orange)'),
                 borderWidth: 1
             }]
@@ -186,8 +186,8 @@ function renderCharts(data) {
             maintainAspectRatio: false,
             plugins: { legend: { display: false } },
             scales: {
-                x: { title: { display: true, text: 'Avg Volume', color: '#555' }, grid: { color: '#222' } },
-                y: { title: { display: true, text: 'Clearance Days', color: '#555' }, grid: { color: '#222' } }
+                x: { title: { display: true, text: 'Avg Volume', color: '#64748B' }, grid: { color: '#21262D' }, ticks: { color: '#94A3B8' } },
+                y: { title: { display: true, text: 'Clearance Days', color: '#64748B' }, grid: { color: '#21262D' }, ticks: { color: '#94A3B8' } }
             }
         }
     });
@@ -210,7 +210,7 @@ function renderCharts(data) {
                 borderWidth: 0,
                 backgroundColor: (ctx) => {
                     const val = ctx.raw?._data?.value || 0;
-                    return `rgba(255, 107, 0, ${Math.min(0.2 + val/20, 1)})`;
+                    return `rgba(249, 115, 22, ${Math.min(0.2 + val/20, 0.8)})`;
                 },
                 labels: { display: true, color: '#FFF', font: { family: 'Outfit', weight: 'bold' } }
             }]

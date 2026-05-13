@@ -1,18 +1,18 @@
 :root {
-    --ghn-orange: #FF6B00;
-    --ghn-orange-glow: rgba(255, 107, 0, 0.3);
-    --bg-deep: #080808;
-    --panel-bg: #121212;
-    --panel-hover: #181818;
-    --border: #222222;
-    --text-primary: #FFFFFF;
-    --text-secondary: #888888;
-    --text-dim: #555555;
+    --ghn-orange: #F97316;
+    --ghn-orange-glow: rgba(249, 115, 22, 0.15);
+    --bg-deep: #0B0E14;
+    --panel-bg: #161B22;
+    --panel-hover: #1F242C;
+    --border: #21262D;
+    --text-primary: #E2E8F0;
+    --text-secondary: #94A3B8;
+    --text-dim: #64748B;
     
-    --success: #00FF85;
-    --warning: #FFB800;
-    --danger: #FF2E00;
-    --info: #00A3FF;
+    --success: #10B981;
+    --warning: #F59E0B;
+    --danger: #EF4444;
+    --info: #3B82F6;
     
     --font-main: 'Inter', sans-serif;
     --font-head: 'Outfit', sans-serif;
@@ -199,7 +199,7 @@ select:focus {
 .kpi-gauge-bg {
     flex: 1;
     height: 6px;
-    background: #222;
+    background: #21262D;
     border-radius: 3px;
     overflow: hidden;
 }
@@ -298,7 +298,7 @@ select:focus {
 }
 
 #search-box {
-    background: #000;
+    background: #0D1117;
     border: 1px solid var(--border);
     color: white;
     padding: 8px 12px 8px 36px;
@@ -363,7 +363,7 @@ tr:hover td {
 .eff-bar-bg {
     width: 60px;
     height: 4px;
-    background: #222;
+    background: #21262D;
     border-radius: 2px;
 }
 
