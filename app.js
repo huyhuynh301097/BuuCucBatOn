@@ -1,4 +1,4 @@
-const CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSOZ7OjPNKAkocRDwAWYgkRfyo-hgtECdyRHclhG8nXrTJ3iw_wYb2lzAsL4-KV2rt1lMJggpXag-U8/pub?gid=1824762908&single=true&output=csv';
+const CSV_URL = 'https://docs.google.com/spreadsheets/d/1odUPX5mWpUYUUQOrhX_k8kXWV7drMUdQ58DRwgSQNS8/gviz/tq?tqx=out:csv&sheet=Data%20DB';
 
 let rawData = [];
 let charts = {};
