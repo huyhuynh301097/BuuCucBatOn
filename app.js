@@ -33,6 +33,12 @@ async function fetchAndRender() {
 
 function processData() {
     rawData.forEach(d => {
+        // Chuẩn hóa hỗ trợ cả tiêu đề viết hoa và viết thường từ Google Sheet
+        ['BL LM', 'BL LM >5 ngay', 'BL KTC', '%BL LM >5 ngay', 'BL KTC cung tinh', '%BL KTC cung tinh'].forEach(k => {
+            if (d[k] === undefined && d[k.toLowerCase()] !== undefined) {
+                d[k] = d[k.toLowerCase()];
+            }
+        });
         d['BL LM'] = +d['BL LM'] || 0;
         d['BL KTC'] = +d['BL KTC'] || 0;
         d['BL LM >5 ngay'] = +d['BL LM >5 ngay'] || 0;
@@ -40,7 +46,7 @@ function processData() {
         d['gtc_max_7ngay'] = +d['gtc_max_7ngay'] || 0;
         d['du_kien_clear_ton'] = +d['du_kien_clear_ton'] || 0;
         
-        d.date = d.update_time.split(' ')[0];
+        d.date = (d.ngay || d.update_time || '').split(' ')[0].replace(/\//g, '-');
         d.total_backlog = d['BL LM'] + d['BL KTC'];
         d.ratio = d.gtc_avg_7ngay > 0 ? (d.total_backlog / d.gtc_avg_7ngay) : 0;
         
