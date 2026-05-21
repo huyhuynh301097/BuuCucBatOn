@@ -22,7 +22,7 @@
             <div class="filters">
                 <select id="date-f"></select>
                 <select id="type-f"><option value="All">TẤT CẢ LOẠI KHO</option></select>
-                <select id="region-f"><option value="All">TẤT CẢ VÙNG GIAO</option></select>
+                <select id="region-f"><option value="All">CẢ NƯỚC</option></select>
                 <input type="text" id="search-po" placeholder="TÌM KIẾM BƯU CỤC...">
                 <button onclick="load()" style="background:var(--ghn); border:none; padding:6px 12px; cursor:pointer; font-weight:700; font-family:inherit;">ĐỒNG BỘ</button>
             </div>
@@ -31,18 +31,18 @@
         <!-- Tab 1: Real-time Operational OS -->
         <div id="tab-main" class="tab-content active">
             <div class="kpi-s">
-                <div class="kpi"><span>SỨC KHỎE HỆ THỐNG</span><b id="k-health">--%</b><div id="d-health" class="dod"></div></div>
-                <div class="kpi" style="border-left-color:var(--err)"><span>BƯU CỤC NGUY CẤP</span><b id="k-un">0</b><div id="d-un" class="dod"></div></div>
-                <div class="kpi" style="border-left-color:var(--warn)"><span>SL TỒN > 5 NGÀY</span><b id="k-ag">0</b><div id="d-ag" class="dod"></div></div>
-                <div class="kpi" style="border-left-color:var(--info)"><span>TỐC ĐỘ GIẢI PHÓNG</span><b id="k-cl">0D</b><div id="d-cl" class="dod"></div></div>
+                <div class="kpi"><span>SỨC KHỎE VẬN HÀNH</span><b id="k-health">--%</b><div id="d-health" class="dod"></div></div>
+                <div class="kpi" style="border-left-color:var(--err)"><span>BƯU CỤC BẤT ỔN</span><b id="k-un">0</b><div id="d-un" class="dod"></div></div>
+                <div class="kpi" style="border-left-color:var(--warn)"><span>ĐƠN TỒN >5 NGÀY</span><b id="k-ag">0</b><div id="d-ag" class="dod"></div></div>
+                <div class="kpi" style="border-left-color:var(--info)"><span>DỰ KIẾN CLEAR BL LM</span><b id="k-cl">0D</b><div id="d-cl" class="dod"></div></div>
             </div>
             <div class="grid">
                 <div class="col-l">
-                    <div class="panel"><h3 style="font-size:12px; margin:0; color:var(--ghn)">BẢN ĐỒ TỒN ĐỌNG VÀ NGÀY GIẢI PHÓNG HÀNG</h3><div class="chart"><canvas id="c-scatter"></canvas></div></div>
-                    <div class="panel" style="margin-top:15px;"><h3 style="font-size:12px; margin:0; color:var(--ghn)">PHÂN TÍCH NGUYÊN NHÂN GỐC RỄ</h3><div class="chart"><canvas id="c-tree"></canvas></div></div>
+                    <div class="panel"><h3 style="font-size:12px; margin:0; color:var(--ghn)">BẢN ĐỒ TỒN ĐỌNG VÀ NGÀY CLEAR HÀNG</h3><div class="chart"><canvas id="c-scatter"></canvas></div></div>
+                    <div class="panel" style="margin-top:15px;"><h3 style="font-size:12px; margin:0; color:var(--ghn)">LÝ DO BẤT ỔN</h3><div class="chart"><canvas id="c-tree"></canvas></div></div>
                 </div>
                 <div class="col-r">
-                    <div class="panel" style="padding: 0;"><div style="padding:15px; border-bottom:1px solid var(--brd);"><h3 style="font-size:12px; margin:0; color:var(--ghn)">BẢNG HIỆU SUẤT VẬN HÀNH CHI TIẾT</h3></div><div class="table-w"><table id="t-main"><thead><tr><th>TÊN BƯU CỤC</th><th>TRẠNG THÁI</th><th>RỦI RO</th><th>TỒN LM</th><th>AGING >5N</th><th>% AGING</th><th>TỒN KTC</th><th>KTC CÙNG TỈNH</th><th>% KTC CÙNG TỈNH</th><th>TẠO MỚI (H.QUA)</th><th>TẠO MỚI (T.BÌNH)</th><th>GIAO TC (H.QUA)</th><th>GIAO TC (T.BÌNH)</th><th>GIAO TC (MAX)</th><th>NGÀY XỬ LÝ</th><th>LÝ DO BẤT ỔN</th></tr></thead><tbody></tbody></table></div></div>
+                    <div class="panel" style="padding: 0;"><div style="padding:15px; border-bottom:1px solid var(--brd);"><h3 style="font-size:12px; margin:0; color:var(--ghn)">CHI TIẾT BƯU CỤC</h3></div><div class="table-w"><table id="t-main"><thead><tr><th>TÊN BƯU CỤC</th><th>TRẠNG THÁI</th><th>RỦI RO</th><th>TỒN LM</th><th>AGING >5N</th><th>% AGING</th><th>TỒN KTC</th><th>KTC CÙNG TỈNH</th><th>% KTC CÙNG TỈNH</th><th>TẠO MỚI (H.QUA)</th><th>TẠO MỚI (T.BÌNH)</th><th>GIAO TC (H.QUA)</th><th>GIAO TC (T.BÌNH)</th><th>GIAO TC (MAX)</th><th>NGÀY XỬ LÝ</th><th>LÝ DO BẤT ỔN</th></tr></thead><tbody></tbody></table></div></div>
                 </div>
             </div>
         </div>
@@ -51,15 +51,15 @@
         <div id="tab-trends" class="tab-content">
             <div class="trend-grid-charts">
                 <div class="panel">
-                    <h3 style="font-size:12px; margin:0; color:var(--ghn)">XU HƯỚNG TỒN ĐỌNG LAST MILE & TỶ LỆ AGING > 5 NGÀY</h3>
+                    <h3 style="font-size:12px; margin:0; color:var(--ghn)">XU HƯỚNG TỒN ĐỌNG LAST MILE & TỶ LỆ AGING >5 NGÀY</h3>
                     <div class="chart" style="height: 320px;"><canvas id="c-fifo-trend"></canvas></div>
                 </div>
                 <div class="panel">
-                    <h3 style="font-size:12px; margin:0; color:var(--ghn)">HÀNG VÀO vs HÀNG RA & % VƯỢT NĂNG LỰC XỬ LÝ</h3>
+                    <h3 style="font-size:12px; margin:0; color:var(--ghn)">ĐƠN GTC và ĐƠN TẠO & % VƯỢT NĂNG LỰC XỬ LÝ</h3>
                     <div class="chart" style="height: 320px;"><canvas id="c-throughput-trend"></canvas></div>
                 </div>
                 <div class="panel">
-                    <h3 style="font-size:12px; margin:0; color:var(--ghn)">DIỄN BIẾN SỐ BƯU CỤC BẤT ỔN THEO NGÀY</h3>
+                    <h3 style="font-size:12px; margin:0; color:var(--ghn)">DIỄN BIẾN SỨC KHỎE VẬN HÀNH THEO NGÀY</h3>
                     <div class="chart" style="height: 320px;"><canvas id="c-risk-trend"></canvas></div>
                 </div>
                 <div class="panel">
@@ -69,7 +69,7 @@
             </div>
             <!-- Chart 5: Predictive Early Warning -->
             <div class="panel" style="margin-top:20px;">
-                <h3 style="font-size:12px; margin:0; color:var(--ghn)">RADAR DỰ BÁO: BƯU CỤC ĐANG XẤU ĐI SO VỚI NGÀY HÔM QUA (CẢNH BÁO SỚM)</h3>
+                <h3 style="font-size:12px; margin:0; color:var(--ghn)">DỰ BÁO: BƯU CỤC ĐANG XẤU ĐI SO VỚI NGÀY HÔM QUA</h3>
                 <div class="chart" style="height: 340px;"><canvas id="c-forecast-warning"></canvas></div>
             </div>
         </div>
