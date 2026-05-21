@@ -360,14 +360,14 @@
                     labels: dates,
                     datasets: [
                         {
-                            label: 'Hàng vào (Tạo mới)',
+                            label: 'ĐƠN TẠO',
                             data: trendData.map(d => d.total_created),
                             backgroundColor: 'rgba(59, 130, 246, 0.35)',
                             borderColor: '#3B82F6', borderWidth: 1,
                             yAxisID: 'y'
                         },
                         {
-                            label: 'Hàng ra (Giao thành công)',
+                            label: 'ĐƠN GTC',
                             data: trendData.map(d => d.total_delivered),
                             backgroundColor: 'rgba(16, 185, 129, 0.35)',
                             borderColor: '#10B981', borderWidth: 1,
