@@ -1,7 +1,7 @@
 :root {
     /* Professional Muted Palette */
-    --ghn: #EA580C; /* Deep sophisticated orange */
-    --ghn-glow: rgba(234, 88, 12, 0.15);
+    --ghn: #D56C36; /* Softer, premium warm clay orange */
+    --ghn-glow: rgba(213, 108, 54, 0.12);
     --bg: #0F172A; /* Deep Navy Slate */
     --card: #1E293B; /* Slate 800 */
     --card-hover: #334155; /* Slate 700 */
@@ -298,4 +298,82 @@ td:first-child, th:first-child {
     .filters select, .filters input, .filters button { flex: 1; }
     .kpi-s { grid-template-columns: 1fr; }
     .logo { text-align: center; }
+}
+
+/* Tab Switcher & Trend View Styles */
+.tab-switcher {
+    display: flex;
+    gap: 4px;
+    background: #090D16;
+    padding: 4px;
+    border-radius: 8px;
+    border: 1px solid var(--brd);
+}
+
+.tab-btn {
+    background: transparent;
+    color: var(--dim);
+    border: none;
+    padding: 6px 14px;
+    font-size: 11px;
+    font-weight: 700;
+    border-radius: 6px;
+    cursor: pointer;
+    font-family: inherit;
+    transition: all 0.2s ease;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.tab-btn:hover {
+    color: var(--text);
+}
+
+.tab-btn.active {
+    background: var(--ghn);
+    color: #FFF;
+    box-shadow: 0 0 12px var(--ghn-glow);
+}
+
+.tab-content {
+    display: none;
+    animation: fadeIn 0.4s ease;
+}
+
+.tab-content.active {
+    display: block;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(4px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* Trend Panel adjustments */
+.trend-grid-top {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+    margin-bottom: 24px;
+}
+
+.trend-grid-charts {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 20px;
+    margin-bottom: 20px;
+}
+
+.trend-panel-full {
+    grid-column: span 2;
+}
+
+@media (max-width: 1200px) {
+    .trend-grid-charts { grid-template-columns: 1fr; }
+    .trend-panel-full { grid-column: span 1; }
+    .trend-grid-top { grid-template-columns: repeat(2, 1fr); }
+}
+
+@media (max-width: 600px) {
+    .trend-grid-top { grid-template-columns: 1fr; }
 }

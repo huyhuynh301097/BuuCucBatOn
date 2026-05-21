@@ -6,6 +6,7 @@
     <title>GHN | BƯU CỤC BẤT ỔN</title>
     <script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-chart-treemap@2.3.0/dist/chartjs-chart-treemap.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Space+Grotesk:wght@500;700;900&family=Outfit:wght@800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
@@ -14,27 +15,62 @@
     <div class="app-container">
         <div class="nav">
             <div class="logo">GHN - BƯU CỤC BẤT ỔN</div>
+            <div class="tab-switcher">
+                <button class="tab-btn active" data-tab="main" onclick="switchTab('main')">Vận Hành Thực Tế</button>
+                <button class="tab-btn" data-tab="trends" onclick="switchTab('trends')">Phân Tích Xu Hướng</button>
+            </div>
             <div class="filters">
                 <select id="date-f"></select>
-                <select id="type-f"><option value="All">WAREHOUSE: ALL</option></select>
-                <select id="region-f"><option value="All">REGION: GLOBAL</option></select>
-                <input type="text" id="search-po" placeholder="SYSTEM SEARCH...">
-                <button onclick="load()" style="background:var(--ghn); border:none; padding:6px 12px; cursor:pointer; font-weight:700; font-family:inherit;">SYNC</button>
+                <select id="type-f"><option value="All">TẤT CẢ LOẠI KHO</option></select>
+                <select id="region-f"><option value="All">TẤT CẢ VÙNG GIAO</option></select>
+                <input type="text" id="search-po" placeholder="TÌM KIẾM BƯU CỤC...">
+                <button onclick="load()" style="background:var(--ghn); border:none; padding:6px 12px; cursor:pointer; font-weight:700; font-family:inherit;">ĐỒNG BỘ</button>
             </div>
         </div>
-        <div class="kpi-s">
-            <div class="kpi"><span>NETWORK HEALTH</span><b id="k-health">--%</b><div id="d-health" class="dod"></div></div>
-            <div class="kpi" style="border-left-color:var(--err)"><span>CRITICAL UNITS</span><b id="k-un">0</b><div id="d-un" class="dod"></div></div>
-            <div class="kpi" style="border-left-color:var(--warn)"><span>AGING > 5 NGÀY VOL</span><b id="k-ag">0</b><div id="d-ag" class="dod"></div></div>
-            <div class="kpi" style="border-left-color:var(--info)"><span>CLEARANCE SPEED</span><b id="k-cl">0D</b><div id="d-cl" class="dod"></div></div>
-        </div>
-        <div class="grid">
-            <div class="col-l">
-                <div class="panel"><h3 style="font-size:12px; margin:0; color:var(--ghn)">BACKLOG VS CLEARANCE MAP</h3><div class="chart"><canvas id="c-scatter"></canvas></div></div>
-                <div class="panel" style="margin-top:15px;"><h3 style="font-size:12px; margin:0; color:var(--ghn)">GRADIENT ROOT CAUSES</h3><div class="chart"><canvas id="c-tree"></canvas></div></div>
+        
+        <!-- Tab 1: Real-time Operational OS -->
+        <div id="tab-main" class="tab-content active">
+            <div class="kpi-s">
+                <div class="kpi"><span>SỨC KHỎE HỆ THỐNG</span><b id="k-health">--%</b><div id="d-health" class="dod"></div></div>
+                <div class="kpi" style="border-left-color:var(--err)"><span>BƯU CỤC NGUY CẤP</span><b id="k-un">0</b><div id="d-un" class="dod"></div></div>
+                <div class="kpi" style="border-left-color:var(--warn)"><span>SL TỒN > 5 NGÀY</span><b id="k-ag">0</b><div id="d-ag" class="dod"></div></div>
+                <div class="kpi" style="border-left-color:var(--info)"><span>TỐC ĐỘ GIẢI PHÓNG</span><b id="k-cl">0D</b><div id="d-cl" class="dod"></div></div>
             </div>
-            <div class="col-r">
-                <div class="panel" style="padding: 0;"><div style="padding:15px; border-bottom:1px solid var(--brd);"><h3 style="font-size:12px; margin:0; color:var(--ghn)">MASTER PERFORMANCE DATA</h3></div><div class="table-w"><table id="t-main"><thead><tr><th>UNIT NAME</th><th>STATUS</th><th>RISK</th><th>BL LM</th><th>AGING > 5 NGÀY</th><th>% AGING</th><th>BL KTC</th><th>KTC PROV</th><th>% KTC P</th><th>CREATE N1</th><th>CREATE AV</th><th>DELIV N1</th><th>DELIV AV</th><th>DELIV MX</th><th>CLEAR D</th><th>REASON</th></tr></thead><tbody></tbody></table></div></div>
+            <div class="grid">
+                <div class="col-l">
+                    <div class="panel"><h3 style="font-size:12px; margin:0; color:var(--ghn)">BẢN ĐỒ TỒN ĐỌNG VÀ NGÀY GIẢI PHÓNG HÀNG</h3><div class="chart"><canvas id="c-scatter"></canvas></div></div>
+                    <div class="panel" style="margin-top:15px;"><h3 style="font-size:12px; margin:0; color:var(--ghn)">PHÂN TÍCH NGUYÊN NHÂN GỐC RỄ</h3><div class="chart"><canvas id="c-tree"></canvas></div></div>
+                </div>
+                <div class="col-r">
+                    <div class="panel" style="padding: 0;"><div style="padding:15px; border-bottom:1px solid var(--brd);"><h3 style="font-size:12px; margin:0; color:var(--ghn)">BẢNG HIỆU SUẤT VẬN HÀNH CHI TIẾT</h3></div><div class="table-w"><table id="t-main"><thead><tr><th>TÊN BƯU CỤC</th><th>TRẠNG THÁI</th><th>RỦI RO</th><th>TỒN LM</th><th>AGING >5N</th><th>% AGING</th><th>TỒN KTC</th><th>KTC CÙNG TỈNH</th><th>% KTC CÙNG TỈNH</th><th>TẠO MỚI (H.QUA)</th><th>TẠO MỚI (T.BÌNH)</th><th>GIAO TC (H.QUA)</th><th>GIAO TC (T.BÌNH)</th><th>GIAO TC (MAX)</th><th>NGÀY XỬ LÝ</th><th>LÝ DO BẤT ỔN</th></tr></thead><tbody></tbody></table></div></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tab 2: Trends Analytics OS -->
+        <div id="tab-trends" class="tab-content">
+            <div class="trend-grid-charts">
+                <div class="panel">
+                    <h3 style="font-size:12px; margin:0; color:var(--ghn)">XU HƯỚNG TỒN ĐỌNG LAST MILE & TỶ LỆ AGING > 5 NGÀY</h3>
+                    <div class="chart" style="height: 320px;"><canvas id="c-fifo-trend"></canvas></div>
+                </div>
+                <div class="panel">
+                    <h3 style="font-size:12px; margin:0; color:var(--ghn)">HÀNG VÀO vs HÀNG RA & % VƯỢT NĂNG LỰC XỬ LÝ</h3>
+                    <div class="chart" style="height: 320px;"><canvas id="c-throughput-trend"></canvas></div>
+                </div>
+                <div class="panel">
+                    <h3 style="font-size:12px; margin:0; color:var(--ghn)">DIỄN BIẾN SỐ BƯU CỤC BẤT ỔN THEO NGÀY</h3>
+                    <div class="chart" style="height: 320px;"><canvas id="c-risk-trend"></canvas></div>
+                </div>
+                <div class="panel">
+                    <h3 style="font-size:12px; margin:0; color:var(--ghn)">TOP BƯU CỤC ỔN ĐỊNH ĐANG CÓ NGUY CƠ RỦI RO CAO NHẤT</h3>
+                    <div class="chart" style="height: 320px;"><canvas id="c-early-warning"></canvas></div>
+                </div>
+            </div>
+            <!-- Chart 5: Predictive Early Warning -->
+            <div class="panel" style="margin-top:20px;">
+                <h3 style="font-size:12px; margin:0; color:var(--ghn)">RADAR DỰ BÁO: BƯU CỤC ĐANG XẤU ĐI SO VỚI NGÀY HÔM QUA (CẢNH BÁO SỚM)</h3>
+                <div class="chart" style="height: 340px;"><canvas id="c-forecast-warning"></canvas></div>
             </div>
         </div>
     </div>
@@ -43,6 +79,11 @@
         const SOURCE = 'https://docs.google.com/spreadsheets/d/1odUPX5mWpUYUUQOrhX_k8kXWV7drMUdQ58DRwgSQNS8/gviz/tq?tqx=out:csv&sheet=Data%20DB';
         const PROXY = url => `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(url + '&t=' + Date.now())}`;
         let rawData = [], charts = {};
+        let activeTab = 'main';
+
+        Chart.register(ChartDataLabels);
+        Chart.defaults.plugins.datalabels.display = false;
+
         async function load() {
             showToast('SYSTEM CONNECTING...');
             try {
@@ -52,11 +93,11 @@
                 showToast('CONNECTION ESTABLISHED', 'success');
             } catch (e) { showToast('CONNECTION FAILED', 'danger'); }
         }
+
         function parseData(text) {
             const parsed = d3.csvParse(text.trim());
             const latest = new Map();
             parsed.forEach(d => {
-                // Chuẩn hóa hỗ trợ cả tiêu đề viết hoa và viết thường từ Google Sheet
                 ['BL LM', 'BL LM >5 ngay', 'BL KTC', '%BL LM >5 ngay', 'BL KTC cung tinh', '%BL KTC cung tinh'].forEach(k => {
                     if (d[k] === undefined && d[k.toLowerCase()] !== undefined) {
                         d[k] = d[k.toLowerCase()];
@@ -64,6 +105,17 @@
                 });
                 const date = (d.ngay || d.update_time || '').split(' ')[0].replace(/\//g, '-');
                 const key = `${date}_${d.kho_giao_id}`;
+                
+                d.bl_lm = Math.round(+(d['BL LM'] || 0));
+                d.bl_aging = Math.round(+(d['BL LM >5 ngay'] || 0));
+                d.bl_ktc = Math.round(+(d['BL KTC'] || 0));
+                d.clearance = Math.round(+(d.du_kien_clear_ton || 0));
+                d.gtc_avg = Math.round(+(d.gtc_avg_7ngay || 0));
+                d.risk = Math.min((d.clearance * 20) + (d.tinh_hinh === 'Bất ổn' ? 30 : 0) + (d.bl_aging > 0 ? 20 : 0), 100);
+                
+                d.created = Math.round(+(d.tao_n1 || 0));
+                d.delivered = Math.round(+(d.gtc_n1 || 0));
+
                 if (!latest.has(key)) latest.set(key, d);
                 d.dateStr = date;
             });
@@ -80,26 +132,29 @@
             }
             render();
         }
+
+        function switchTab(tabId) {
+            activeTab = tabId;
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.tab === tabId);
+            });
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.toggle('active', content.id === `tab-${tabId}`);
+            });
+            render();
+        }
+
         function render() {
             const date = document.getElementById('date-f').value, region = document.getElementById('region-f').value, type = document.getElementById('type-f').value, search = document.getElementById('search-po').value.toLowerCase();
             const filtered = rawData.filter(d => d.dateStr === date && (region === 'All' || d.vung_giao === region) && (type === 'All' || d.warehouse_type === type) && (d.kho_giao_name || '').toLowerCase().includes(search));
             
-            // DoD Logic
             const dates = [...new Set(rawData.map(d => d.dateStr))].sort();
             const prevDate = dates[dates.indexOf(date) - 1];
             const prevData = prevDate ? rawData.filter(d => d.dateStr === prevDate && (region === 'All' || d.vung_giao === region) && (type === 'All' || d.warehouse_type === type)) : null;
 
-            filtered.forEach(d => {
-                d.bl_lm = Math.round(+(d['BL LM'] || 0)); d.bl_aging = Math.round(+(d['BL LM >5 ngay'] || 0));
-                d.bl_ktc = Math.round(+(d['BL KTC'] || 0)); d.clearance = Math.round(+(d.du_kien_clear_ton || 0));
-                d.gtc_avg = Math.round(+(d.gtc_avg_7ngay || 0));
-                d.risk = Math.min((d.clearance * 20) + (d.tinh_hinh === 'Bất ổn' ? 30 : 0) + (d.bl_aging > 0 ? 20 : 0), 100);
-            });
-
             const un = filtered.filter(d => d.tinh_hinh === 'Bất ổn');
             const health = Math.round(100 - (un.length / (filtered.length || 1) * 100));
             const aging = d3.sum(filtered, d => d.bl_aging);
-            // Chỉ tính Clearance cho bưu cục đang "bể" (Bất ổn)
             const clearance = Math.round(d3.mean(un, d => d.clearance) || 0);
 
             document.getElementById('k-health').textContent = health + '%';
@@ -112,7 +167,6 @@
                 const pHealth = Math.round(100 - (pUn.length / (prevData.length || 1) * 100));
                 const pAging = d3.sum(prevData, d => d.bl_aging);
                 const pClearance = Math.round(d3.mean(pUn, d => d.clearance) || 0);
-                
                 updateDoD('d-health', health - pHealth, pHealth, true);
                 updateDoD('d-un', un.length - pUn.length, pUn.length, false);
                 updateDoD('d-ag', aging - pAging, pAging, false);
@@ -121,19 +175,64 @@
                 ['d-health','d-un','d-ag','d-cl'].forEach(id => document.getElementById(id).innerHTML = '');
             }
 
-            drawCharts(filtered);
-            const tbody = document.querySelector('#t-main tbody');
-            tbody.innerHTML = '';
-            filtered.sort((a,b) => b.risk - a.risk).forEach(d => {
-                const tr = document.createElement('tr');
-                tr.innerHTML = `<td>${d.kho_giao_name}</td><td><span class="pill ${d.tinh_hinh === 'Bất ổn' ? 'p-err' : 'p-ok'}">${d.tinh_hinh}</span></td><td><b style="color:${d.risk > 70 ? 'var(--err)' : 'var(--ok)'}">${Math.round(d.risk)}</b></td><td>${d.bl_lm.toLocaleString()}</td><td style="color:var(--err)">${d.bl_aging.toLocaleString()}</td><td style="color:#FFF">${(+(d['%BL LM >5 ngay'] || 0) * 100).toFixed(1)}%</td><td>${d.bl_ktc.toLocaleString()}</td><td>${Math.round(+(d['BL KTC cung tinh'] || 0)).toLocaleString()}</td><td style="color:#FFF">${(+(d['%BL KTC cung tinh'] || 0) * 100).toFixed(1)}%</td><td>${Math.round(+(d.tao_n1 || 0)).toLocaleString()}</td><td>${Math.round(+(d.tao_avg_7ngay || 0)).toLocaleString()}</td><td>${Math.round(+(d.gtc_n1 || 0)).toLocaleString()}</td><td>${Math.round(+(d.gtc_avg_7ngay || 0)).toLocaleString()}</td><td>${Math.round(+(d.gtc_max_7ngay || 0)).toLocaleString()}</td><td style="font-weight:700; color:#FFF">${d.clearance}D</td><td style="font-size:9px">${d.ly_do_bat_on || '-'}</td>`;
-                tbody.appendChild(tr);
-            });
+            if (activeTab === 'main') {
+                drawCharts(filtered);
+                const tbody = document.querySelector('#t-main tbody');
+                tbody.innerHTML = '';
+                filtered.sort((a,b) => b.risk - a.risk).forEach(d => {
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `<td>${d.kho_giao_name}</td><td><span class="pill ${d.tinh_hinh === 'Bất ổn' ? 'p-err' : 'p-ok'}">${d.tinh_hinh}</span></td><td><b style="color:${d.risk > 70 ? 'var(--err)' : 'var(--ok)'}">${Math.round(d.risk)}</b></td><td>${d.bl_lm.toLocaleString()}</td><td style="color:var(--err)">${d.bl_aging.toLocaleString()}</td><td style="color:#FFF">${(+(d['%BL LM >5 ngay'] || 0) * 100).toFixed(1)}%</td><td>${d.bl_ktc.toLocaleString()}</td><td>${Math.round(+(d['BL KTC cung tinh'] || 0)).toLocaleString()}</td><td style="color:#FFF">${(+(d['%BL KTC cung tinh'] || 0) * 100).toFixed(1)}%</td><td>${Math.round(+(d.tao_n1 || 0)).toLocaleString()}</td><td>${Math.round(+(d.tao_avg_7ngay || 0)).toLocaleString()}</td><td>${Math.round(+(d.gtc_n1 || 0)).toLocaleString()}</td><td>${Math.round(+(d.gtc_avg_7ngay || 0)).toLocaleString()}</td><td>${Math.round(+(d.gtc_max_7ngay || 0)).toLocaleString()}</td><td style="font-weight:700; color:#FFF">${d.clearance}D</td><td style="font-size:9px">${d.ly_do_bat_on || '-'}</td>`;
+                    tbody.appendChild(tr);
+                });
+            } else if (activeTab === 'trends') {
+                renderTrendCharts();
+            }
         }
+
         function drawCharts(f) {
             const ctxS = document.getElementById('c-scatter').getContext('2d');
             if (charts.s) charts.s.destroy();
-            charts.s = new Chart(ctxS, { type: 'bubble', data: { datasets: [{ data: f.map(d => ({ x: d.bl_lm, y: d.clearance, r: Math.sqrt(d.bl_aging) * 1.5 + 4, name: d.kho_giao_name, aging: d.bl_aging, gtc: d.gtc_avg })), backgroundColor: f.map(d => d.risk > 70 ? 'rgba(239, 68, 68, 0.5)' : 'rgba(249, 115, 22, 0.4)'), borderColor: '#F97316' }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, tooltip: { callbacks: { label: (ctx) => [`BC: ${ctx.raw.name}`, `Tồn LM: ${ctx.raw.x}`, `Aging > 5n: ${ctx.raw.aging}`, `GTC L7D: ${ctx.raw.gtc}`, `Clear: ${ctx.raw.y}D`] } } }, scales: { x: { grid: { color: '#21262D' }, ticks: { color: '#94A3B8' } }, y: { grid: { color: '#21262D' }, ticks: { color: '#94A3B8' } } } } });
+            charts.s = new Chart(ctxS, { 
+                type: 'bubble', 
+                data: { 
+                    datasets: [{ 
+                        data: f.map(d => ({ x: d.bl_lm, y: d.clearance, r: Math.sqrt(d.bl_aging) * 1.5 + 4, name: d.kho_giao_name, aging: d.bl_aging, gtc: d.gtc_avg })), 
+                        backgroundColor: f.map(d => d.risk > 70 ? 'rgba(239, 68, 68, 0.55)' : 'rgba(213, 108, 54, 0.45)'), 
+                        borderColor: '#D56C36', 
+                        borderWidth: 1.5 
+                    }] 
+                }, 
+                options: { 
+                    responsive: true, 
+                    maintainAspectRatio: false, 
+                    plugins: { 
+                        legend: { display: false }, 
+                        tooltip: { 
+                            callbacks: { 
+                                label: (ctx) => [
+                                    `Bưu cục: ${ctx.raw.name}`, 
+                                    `Tồn Last Mile: ${ctx.raw.x.toLocaleString()}`, 
+                                    `Aging > 5 ngày: ${ctx.raw.aging.toLocaleString()}`, 
+                                    `GTC TB 7 ngày: ${ctx.raw.gtc.toLocaleString()}`, 
+                                    `Ngày giải phóng: ${ctx.raw.y} ngày`
+                                ] 
+                            } 
+                        } 
+                    }, 
+                    scales: { 
+                        x: { 
+                            title: { display: true, text: 'Tồn đọng Last Mile (Đơn hàng)', color: '#94A3B8', font: { family: 'Outfit', size: 10 } },
+                            grid: { color: '#21262D' }, 
+                            ticks: { color: '#94A3B8' } 
+                        }, 
+                        y: { 
+                            title: { display: true, text: 'Ngày giải phóng hàng dự kiến (Ngày)', color: '#94A3B8', font: { family: 'Outfit', size: 10 } },
+                            grid: { color: '#21262D' }, 
+                            ticks: { color: '#94A3B8' } 
+                        } 
+                    } 
+                } 
+            });
             const ctxT = document.getElementById('c-tree').getContext('2d');
             if (charts.tree) charts.tree.destroy();
             const counts = { 'Tồn LM': 0, 'Tồn KTC': 0, 'Tồn Aging > 5 ngày': 0 };
@@ -145,9 +244,346 @@
             });
             const treeData = Object.entries(counts).filter(e => e[1] > 0).map(([key, value]) => ({ key, value }));
             const maxVal = Math.max(...treeData.map(d => d.value));
-            charts.tree = new Chart(ctxT, { type: 'treemap', data: { datasets: [{ tree: treeData, key: 'value', groups: ['key'], spacing: 3, backgroundColor: (ctx) => { const val = ctx.raw?._data?.value || 0; const alpha = 0.3 + (val / (maxVal || 1)) * 0.6; return `rgba(249, 115, 22, ${alpha})`; }, borderColor: '#F97316', borderWidth: 1, labels: { display: true, color: '#FFF', font: { size: 11, weight: '700', family: 'Space Grotesk' }, formatter: ctx => [`${ctx.raw?._data?.key}`, `${ctx.raw?._data?.value} UNITS`] } }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } } });
+            charts.tree = new Chart(ctxT, { 
+                type: 'treemap', 
+                data: { 
+                    datasets: [{ 
+                        tree: treeData, 
+                        key: 'value', 
+                        groups: ['key'], 
+                        spacing: 3, 
+                        backgroundColor: (ctx) => { 
+                            const val = ctx.raw?._data?.value || 0; 
+                            const alpha = 0.25 + (val / (maxVal || 1)) * 0.55; 
+                            return `rgba(213, 108, 54, ${alpha})`; 
+                        }, 
+                        borderColor: '#D56C36', 
+                        borderWidth: 1.5, 
+                        labels: { 
+                            display: true, 
+                            color: '#FFF', 
+                            font: { size: 11, weight: '700', family: 'Space Grotesk' }, 
+                            formatter: ctx => [`${ctx.raw?._data?.key}`, `${ctx.raw?._data?.value} BƯU CỤC`] 
+                        } 
+                    }] 
+                }, 
+                options: { 
+                    responsive: true, 
+                    maintainAspectRatio: false, 
+                    plugins: { 
+                        legend: { display: false } 
+                    } 
+                } 
+            });
         }
+
+        function renderTrendCharts() {
+            const region = document.getElementById('region-f').value;
+            const type = document.getElementById('type-f').value;
+            const search = document.getElementById('search-po').value.toLowerCase();
+            const filteredAllTime = rawData.filter(d => (region === 'All' || d.vung_giao === region) && (type === 'All' || d.warehouse_type === type) && (d.kho_giao_name || '').toLowerCase().includes(search));
+            const dateGroups = d3.group(filteredAllTime, d => d.dateStr);
+            const trendData = Array.from(dateGroups, ([date, records]) => {
+                const total_bl_lm = d3.sum(records, d => d.bl_lm);
+                const total_bl_aging = d3.sum(records, d => d.bl_aging);
+                const total_created = d3.sum(records, d => d.created);
+                const total_delivered = d3.sum(records, d => d.delivered);
+                let unstableCount = 0;
+                records.forEach(d => { if (d.tinh_hinh === 'Bất ổn') unstableCount++; });
+                return { date, total_bl_lm, total_bl_aging, total_created, total_delivered, unstableCount, totalCount: records.length };
+            }).sort((a, b) => a.date.localeCompare(b.date));
+
+            if (!trendData.length) {
+                ['fifo', 'thru', 'risk', 'warning', 'forecast'].forEach(cId => { if (charts[cId]) { charts[cId].destroy(); delete charts[cId]; } });
+                return;
+            }
+
+            const dates = trendData.map(d => d.date);
+
+            // === Chart 1: Tồn LM stacked (≤5N & >5N) + đường % aging ===
+            const ctxFifo = document.getElementById('c-fifo-trend').getContext('2d');
+            if (charts.fifo) charts.fifo.destroy();
+            charts.fifo = new Chart(ctxFifo, {
+                type: 'bar',
+                data: {
+                    labels: dates,
+                    datasets: [
+                        {
+                            label: 'Tồn LM ≤ 5 ngày',
+                            data: trendData.map(d => d.total_bl_lm - d.total_bl_aging),
+                            backgroundColor: 'rgba(213, 108, 54, 0.45)',
+                            borderColor: '#D56C36', borderWidth: 1,
+                            stack: 'stack1', yAxisID: 'y'
+                        },
+                        {
+                            label: 'Tồn LM > 5 ngày (Aging)',
+                            data: trendData.map(d => d.total_bl_aging),
+                            backgroundColor: 'rgba(239, 68, 68, 0.6)',
+                            borderColor: '#EF4444', borderWidth: 1,
+                            stack: 'stack1', yAxisID: 'y'
+                        },
+                        {
+                            label: '% Aging > 5 ngày / Tổng tồn',
+                            data: trendData.map(d => d.total_bl_lm > 0 ? +(d.total_bl_aging / d.total_bl_lm * 100).toFixed(1) : 0),
+                            type: 'line',
+                            borderColor: '#EF4444', backgroundColor: 'rgba(239,68,68,0.08)',
+                            fill: false, tension: 0.3, pointRadius: 4, pointBackgroundColor: '#EF4444',
+                            yAxisID: 'yRight',
+                            datalabels: {
+                                display: true, align: 'top',
+                                color: '#FFF', backgroundColor: 'rgba(239,68,68,0.28)',
+                                borderRadius: 3, padding: { top: 2, bottom: 2, left: 4, right: 4 },
+                                font: { family: 'JetBrains Mono', size: 8, weight: 'bold' },
+                                formatter: val => val.toFixed(1) + '%'
+                            }
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    layout: { padding: { top: 26 } },
+                    plugins: { legend: { labels: { color: '#F1F5F9', font: { family: 'JetBrains Mono', size: 9 } } } },
+                    scales: {
+                        x: { stacked: true, grid: { color: '#21262D' }, ticks: { color: '#94A3B8', font: { family: 'JetBrains Mono', size: 9 } } },
+                        y: { stacked: true, position: 'left', grid: { color: '#21262D' }, ticks: { color: '#94A3B8', font: { family: 'JetBrains Mono', size: 9 } }, title: { display: true, text: 'Lượng hàng tồn LM', color: '#94A3B8', font: { family: 'Outfit', size: 10 } } },
+                        yRight: { position: 'right', grid: { drawOnChartArea: false }, min: 0, max: 100, ticks: { color: '#EF4444', font: { family: 'JetBrains Mono', size: 9 }, callback: v => v + '%' }, title: { display: true, text: 'Tỷ lệ Aging (%)', color: '#EF4444', font: { family: 'Outfit', size: 10 } } }
+                    }
+                }
+            });
+
+            // === Chart 2: Hàng vào vs Hàng ra + đường % vượt với label rõ ===
+            const ctxThru = document.getElementById('c-throughput-trend').getContext('2d');
+            if (charts.thru) charts.thru.destroy();
+            charts.thru = new Chart(ctxThru, {
+                type: 'bar',
+                data: {
+                    labels: dates,
+                    datasets: [
+                        {
+                            label: 'Hàng vào (Tạo mới)',
+                            data: trendData.map(d => d.total_created),
+                            backgroundColor: 'rgba(59, 130, 246, 0.35)',
+                            borderColor: '#3B82F6', borderWidth: 1,
+                            yAxisID: 'y'
+                        },
+                        {
+                            label: 'Hàng ra (Giao thành công)',
+                            data: trendData.map(d => d.total_delivered),
+                            backgroundColor: 'rgba(16, 185, 129, 0.35)',
+                            borderColor: '#10B981', borderWidth: 1,
+                            yAxisID: 'y'
+                        },
+                        {
+                            label: '% Vượt năng lực xử lý',
+                            data: trendData.map(d => d.total_delivered > 0 ? +((d.total_created - d.total_delivered) / d.total_delivered * 100).toFixed(1) : 0),
+                            type: 'line',
+                            borderColor: '#F59E0B', backgroundColor: 'transparent',
+                            tension: 0.3, pointRadius: 4, pointBackgroundColor: '#F59E0B',
+                            yAxisID: 'yRight',
+                            datalabels: {
+                                display: true, align: 'top',
+                                color: '#FFF', backgroundColor: 'rgba(245,158,11,0.28)',
+                                borderRadius: 3, padding: { top: 2, bottom: 2, left: 4, right: 4 },
+                                font: { family: 'JetBrains Mono', size: 8, weight: 'bold' },
+                                formatter: val => (val > 0 ? '+' : '') + val.toFixed(1) + '%'
+                            }
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    layout: { padding: { top: 26 } },
+                    plugins: { legend: { labels: { color: '#F1F5F9', font: { family: 'JetBrains Mono', size: 9 } } } },
+                    scales: {
+                        x: { grid: { color: '#21262D' }, ticks: { color: '#94A3B8', font: { family: 'JetBrains Mono', size: 9 } } },
+                        y: { position: 'left', grid: { color: '#21262D' }, ticks: { color: '#94A3B8', font: { family: 'JetBrains Mono', size: 9 } }, title: { display: true, text: 'Số lượng đơn hàng', color: '#94A3B8', font: { family: 'Outfit', size: 10 } } },
+                        yRight: { position: 'right', grid: { drawOnChartArea: false }, ticks: { color: '#F59E0B', font: { family: 'JetBrains Mono', size: 9 }, callback: v => v + '%' }, title: { display: true, text: '% Vượt năng lực', color: '#F59E0B', font: { family: 'Outfit', size: 10 } } }
+                    }
+                }
+            });
+
+            // === Chart 3: Số bưu cục bất ổn mỗi ngày + đường % (label trên cột và điểm) ===
+            const ctxRisk = document.getElementById('c-risk-trend').getContext('2d');
+            if (charts.risk) charts.risk.destroy();
+            charts.risk = new Chart(ctxRisk, {
+                type: 'bar',
+                data: {
+                    labels: dates,
+                    datasets: [
+                        {
+                            label: 'Số bưu cục bất ổn',
+                            data: trendData.map(d => d.unstableCount),
+                            backgroundColor: 'rgba(239, 68, 68, 0.5)',
+                            borderColor: '#EF4444', borderWidth: 1,
+                            yAxisID: 'y',
+                            datalabels: {
+                                display: true, align: 'top', anchor: 'end',
+                                color: '#FFF',
+                                font: { family: 'JetBrains Mono', size: 9, weight: 'bold' },
+                                formatter: val => val > 0 ? val : ''
+                            }
+                        },
+                        {
+                            label: '% Bưu cục bất ổn / Tổng',
+                            data: trendData.map(d => d.totalCount > 0 ? +(d.unstableCount / d.totalCount * 100).toFixed(1) : 0),
+                            type: 'line',
+                            borderColor: '#D56C36', backgroundColor: 'transparent',
+                            tension: 0.3, pointRadius: 4, pointBackgroundColor: '#D56C36',
+                            yAxisID: 'yRight',
+                            datalabels: {
+                                display: true, align: 'top',
+                                color: '#FFF', backgroundColor: 'rgba(213,108,54,0.28)',
+                                borderRadius: 3, padding: { top: 2, bottom: 2, left: 4, right: 4 },
+                                font: { family: 'JetBrains Mono', size: 8, weight: 'bold' },
+                                formatter: val => val.toFixed(1) + '%'
+                            }
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    layout: { padding: { top: 26 } },
+                    plugins: { legend: { labels: { color: '#F1F5F9', font: { family: 'JetBrains Mono', size: 9 } } } },
+                    scales: {
+                        x: { grid: { color: '#21262D' }, ticks: { color: '#94A3B8', font: { family: 'JetBrains Mono', size: 9 } } },
+                        y: { position: 'left', grid: { color: '#21262D' }, ticks: { color: '#94A3B8', font: { family: 'JetBrains Mono', size: 9 } }, title: { display: true, text: 'Số lượng bưu cục', color: '#94A3B8', font: { family: 'Outfit', size: 10 } } },
+                        yRight: { position: 'right', grid: { drawOnChartArea: false }, min: 0, max: 100, ticks: { color: '#D56C36', font: { family: 'JetBrains Mono', size: 9 }, callback: v => v + '%' }, title: { display: true, text: 'Tỷ lệ bất ổn (%)', color: '#D56C36', font: { family: 'Outfit', size: 10 } } }
+                    }
+                }
+            });
+
+            // === Chart 4: Top bưu cục ổn định nhưng nguy cơ cao nhất ===
+            const date = document.getElementById('date-f').value;
+            const activeFiltered = rawData.filter(d => d.dateStr === date && (region === 'All' || d.vung_giao === region) && (type === 'All' || d.warehouse_type === type) && (d.kho_giao_name || '').toLowerCase().includes(search));
+            const atRiskStable = activeFiltered.filter(d => d.tinh_hinh !== 'Bất ổn').sort((a, b) => b.risk - a.risk).slice(0, 10);
+            const ctxEarly = document.getElementById('c-early-warning').getContext('2d');
+            if (charts.warning) charts.warning.destroy();
+            if (!atRiskStable.length) {
+                charts.warning = new Chart(ctxEarly, { type: 'bar', data: { labels: ['Không có dữ liệu'], datasets: [{ data: [0] }] }, options: { responsive: true, maintainAspectRatio: false } });
+            } else {
+                charts.warning = new Chart(ctxEarly, {
+                    type: 'bar',
+                    data: {
+                        labels: atRiskStable.map(d => d.kho_giao_name),
+                        datasets: [{
+                            label: 'Chỉ số nguy cơ (0-100)',
+                            data: atRiskStable.map(d => Math.round(d.risk)),
+                            backgroundColor: atRiskStable.map(d => `rgba(239, 68, 68, ${0.2 + (d.risk / 100) * 0.6})`),
+                            borderColor: '#EF4444', borderWidth: 1,
+                            datalabels: {
+                                display: true, align: 'end', anchor: 'end',
+                                color: '#FFF',
+                                font: { family: 'JetBrains Mono', size: 9, weight: 'bold' },
+                                formatter: val => val + ' pts'
+                            }
+                        }]
+                    },
+                    options: {
+                        indexAxis: 'y', responsive: true, maintainAspectRatio: false,
+                        layout: { padding: { right: 60 } },
+                        plugins: { legend: { display: false } },
+                        scales: {
+                            x: { grid: { color: '#21262D' }, ticks: { color: '#94A3B8', font: { family: 'JetBrains Mono', size: 9 } }, title: { display: true, text: 'Chỉ số nguy cơ (0-100)', color: '#94A3B8', font: { family: 'Outfit', size: 10 } }, min: 0, max: 100 },
+                            y: { grid: { color: '#21262D' }, ticks: { color: '#FFF', font: { family: 'JetBrains Mono', size: 9 } } }
+                        }
+                    }
+                });
+            }
+
+            // === Chart 5: Radar dự báo - Bưu cục ổn định đang xấu đi (so hôm qua) ===
+            const sortedDates = [...new Set(rawData.map(d => d.dateStr))].sort();
+            const prevDateStr = sortedDates[sortedDates.indexOf(date) - 1];
+            const ctxForecast = document.getElementById('c-forecast-warning').getContext('2d');
+            if (charts.forecast) charts.forecast.destroy();
+
+            if (!prevDateStr) {
+                charts.forecast = new Chart(ctxForecast, {
+                    type: 'bar',
+                    data: { labels: ['Cần ít nhất 2 ngày dữ liệu để phân tích xu hướng'], datasets: [{ data: [0], backgroundColor: 'rgba(100,100,100,0.3)' }] },
+                    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+                });
+                return;
+            }
+
+            const prevFiltered = rawData.filter(d => d.dateStr === prevDateStr && (region === 'All' || d.vung_giao === region) && (type === 'All' || d.warehouse_type === type) && (d.kho_giao_name || '').toLowerCase().includes(search));
+            const prevMap = new Map(prevFiltered.map(d => [d.kho_giao_id, d]));
+
+            const deteriorating = activeFiltered
+                .filter(d => d.tinh_hinh !== 'Bất ổn')
+                .map(d => {
+                    const prev = prevMap.get(d.kho_giao_id);
+                    if (!prev) return null;
+                    const clearanceDelta = d.clearance - prev.clearance;
+                    const agingDelta = d.bl_aging - prev.bl_aging;
+                    const riskDelta = d.risk - prev.risk;
+                    const score = Math.max(0, clearanceDelta * 10 + (agingDelta > 0 ? agingDelta * 0.5 : 0) + riskDelta * 2);
+                    return { ...d, clearanceDelta, agingDelta, riskDelta, score, prevRisk: prev.risk };
+                })
+                .filter(d => d !== null && d.score > 0)
+                .sort((a, b) => b.score - a.score)
+                .slice(0, 10);
+
+            if (!deteriorating.length) {
+                charts.forecast = new Chart(ctxForecast, {
+                    type: 'bar',
+                    data: { labels: ['✓ Tất cả bưu cục ổn định đang có xu hướng cải thiện hoặc giữ nguyên'], datasets: [{ data: [0], backgroundColor: 'rgba(16,185,129,0.3)', borderColor: '#10B981', borderWidth: 1 }] },
+                    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { display: false }, x: { grid: { color: '#21262D' }, ticks: { color: '#10B981' } } } }
+                });
+                return;
+            }
+
+            charts.forecast = new Chart(ctxForecast, {
+                type: 'bar',
+                data: {
+                    labels: deteriorating.map(d => d.kho_giao_name),
+                    datasets: [{
+                        label: 'Chỉ số xấu đi so với hôm qua',
+                        data: deteriorating.map(d => Math.round(d.score)),
+                        backgroundColor: deteriorating.map(d => d.score > 50 ? 'rgba(239,68,68,0.55)' : 'rgba(245,158,11,0.55)'),
+                        borderColor: deteriorating.map(d => d.score > 50 ? '#EF4444' : '#F59E0B'),
+                        borderWidth: 1,
+                        datalabels: {
+                            display: true, align: 'end', anchor: 'end',
+                            color: '#FFF',
+                            font: { family: 'JetBrains Mono', size: 9, weight: 'bold' },
+                            formatter: (val, ctx) => {
+                                const d = deteriorating[ctx.dataIndex];
+                                const parts = [];
+                                if (d.clearanceDelta > 0) parts.push('+' + d.clearanceDelta + 'D');
+                                if (d.agingDelta > 0) parts.push('▲' + d.agingDelta.toLocaleString());
+                                return parts.length ? parts.join(' ') : val;
+                            }
+                        }
+                    }]
+                },
+                options: {
+                    indexAxis: 'y', responsive: true, maintainAspectRatio: false,
+                    layout: { padding: { right: 110 } },
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: (ctx) => {
+                                    const d = deteriorating[ctx.dataIndex];
+                                    return [
+                                        `Ngày giải phóng: ${d.clearance}D  (Δ ${d.clearanceDelta >= 0 ? '+' : ''}${d.clearanceDelta}D vs hôm qua)`,
+                                        `Tồn aging: ${d.bl_aging.toLocaleString()}  (Δ ${d.agingDelta >= 0 ? '+' : ''}${d.agingDelta.toLocaleString()})`,
+                                        `Risk score: ${Math.round(d.prevRisk)} → ${Math.round(d.risk)}  (Δ ${d.riskDelta >= 0 ? '+' : ''}${Math.round(d.riskDelta)})`
+                                    ];
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: { grid: { color: '#21262D' }, ticks: { color: '#94A3B8', font: { family: 'JetBrains Mono', size: 9 } }, title: { display: true, text: 'Chỉ số xấu đi (càng cao càng nguy hiểm)', color: '#94A3B8', font: { family: 'Outfit', size: 10 } } },
+                        y: { grid: { color: '#21262D' }, ticks: { color: '#FFF', font: { family: 'JetBrains Mono', size: 9 } } }
+                    }
+                }
+            });
+        }
+
         function showToast(m, t) { const el = document.getElementById('toast'); el.textContent = m; el.className = `toast show ${t || ''}`; setTimeout(() => el.className = 'toast', 4000); }
+        
         function updateDoD(id, diff, prevVal, isPositiveGood) {
             const el = document.getElementById(id);
             if (diff === 0) { el.innerHTML = '● No change'; el.className = 'dod neutral'; return; }
