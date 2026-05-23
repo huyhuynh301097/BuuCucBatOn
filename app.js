@@ -246,7 +246,7 @@ function updateTable(data, prevData) {
     const tbody = document.querySelector('#main-table tbody');
     tbody.innerHTML = '';
 
-    displayData.sort((a,b) => b.riskScore - a.riskScore).forEach(d => {
+    displayData.sort((a,b) => b['BL LM >5 ngay'] - a['BL LM >5 ngay']).forEach(d => {
         const statusClass = d.riskScore > 70 ? 'status-crit' : (d.riskScore > 30 ? 'status-warn' : 'status-ok');
         const statusText = d.riskScore > 70 ? 'CRITICAL' : (d.riskScore > 30 ? 'WARNING' : 'STABLE');
 
@@ -269,10 +269,6 @@ function updateTable(data, prevData) {
                     <span style="font-family:var(--font-mono)">${(d.efficiency * 100).toFixed(0)}%</span>
                     <div class="eff-bar-bg"><div class="eff-bar-fill" style="width: ${d.efficiency * 100}%; background: ${d.efficiency > 0.8 ? 'var(--success)' : 'var(--warning)'}"></div></div>
                 </div>
-            </td>
-            <td>
-                <span class="risk-dot" style="background: ${d.riskScore > 70 ? 'var(--danger)' : (d.riskScore > 30 ? 'var(--warning)' : 'var(--success)')}"></span>
-                <span style="font-family:var(--font-mono); font-weight:700">${d.riskScore}</span>
             </td>
             <td><span class="status-pill ${statusClass}">${statusText}</span></td>
         `;
