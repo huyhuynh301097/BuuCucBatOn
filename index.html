@@ -67,11 +67,7 @@
                     <div class="chart" style="height: 320px;"><canvas id="c-forecast-warning"></canvas></div>
                 </div>
             </div>
-            <!-- Chart 4: SO SÁNH CƠ CẤU TỒN LAST MILE & NĂNG LỰC GIAO HÀNG -->
-            <div class="panel" style="margin-top:20px;">
-                <h3 style="font-size:12px; margin:0; color:var(--ghn)">SO SÁNH TỒN LAST MILE & NĂNG LỰC GIAO HÀNG (TOP BƯU CỤC NGUY CƠ)</h3>
-                <div class="chart" style="height: 340px;"><canvas id="c-early-warning"></canvas></div>
-            </div>
+
         </div>
     </div>
     <div id="toast" class="toast"></div>
@@ -142,17 +138,24 @@
                 const date = (d.ngay || d.update_time || '').split(' ')[0].replace(/\//g, '-');
                 const key = `${date}_${d.kho_giao_id}`;
                 
-                d.bl_lm = Math.round(+(d['BL LM'] || 0));
-                d.bl_aging = Math.round(+(d['BL LM >5 ngay'] || 0));
-                d.bl_ktc = Math.round(+(d['BL KTC'] || 0));
-                d.clearance = Math.round(+(d.du_kien_clear_ton || 0));
-                d.gtc_avg = Math.round(+(d.gtc_avg_7ngay || 0));
-                d.tao_avg = Math.round(+(d.tao_avg_7ngay || 0));
-                d.gtc_max = Math.round(+(d.gtc_max_7ngay || 0));
+                // Tránh lỗi format số (như dấu phẩy, dấu chấm động, khoảng trắng) từ Google Sheet
+                const parseNum = val => {
+                    if (val === undefined || val === null || val === '') return 0;
+                    const cleanStr = String(val).replace(/[^\d\.-]/g, '');
+                    return parseFloat(cleanStr) || 0;
+                };
+
+                d.bl_lm = Math.round(parseNum(d['BL LM']));
+                d.bl_aging = Math.round(parseNum(d['BL LM >5 ngay']));
+                d.bl_ktc = Math.round(parseNum(d['BL KTC']));
+                d.clearance = Math.round(parseNum(d.du_kien_clear_ton));
+                d.gtc_avg = Math.round(parseNum(d.gtc_avg_7ngay));
+                d.tao_avg = Math.round(parseNum(d.tao_avg_7ngay));
+                d.gtc_max = Math.round(parseNum(d.gtc_max_7ngay));
                 d.risk = Math.min((d.clearance * 20) + (d.tinh_hinh === 'Bất ổn' ? 30 : 0) + (d.bl_aging > 0 ? 20 : 0), 100);
                 
-                d.created = Math.round(+(d.tao_n1 || 0));
-                d.delivered = Math.round(+(d.gtc_n1 || 0));
+                d.created = Math.round(parseNum(d.tao_n1));
+                d.delivered = Math.round(parseNum(d.gtc_n1));
 
                 if (!latest.has(key)) latest.set(key, d);
                 d.dateStr = date;
@@ -490,159 +493,23 @@
                 }
             });
 
-            // === Chart 4: Top bưu cục ổn định nhưng nguy cơ cao nhất ===
+
+
+            // === Chart 5: Dự báo - Bưu cục ổn định đang xấu đi (so hôm qua & tuần trước) ===
             const date = document.getElementById('date-f').value;
             const activeFiltered = rawData.filter(d => d.dateStr === date && (region === 'All' || d.vung_giao === region) && (type === 'All' || d.warehouse_type === type) && (d.kho_giao_name || '').toLowerCase().includes(search));
             
             const sortedDates = [...new Set(rawData.map(d => d.dateStr))].sort();
-            const prevDateStr = sortedDates[sortedDates.indexOf(date) - 1];
+            const dateIdx = sortedDates.indexOf(date);
+            const prevDateStr = sortedDates[dateIdx - 1];
             const prevFiltered = prevDateStr ? rawData.filter(d => d.dateStr === prevDateStr && (region === 'All' || d.vung_giao === region) && (type === 'All' || d.warehouse_type === type)) : [];
             const prevMap = new Map(prevFiltered.map(d => [d.kho_giao_id, d]));
 
-            const atRiskStable = activeFiltered
-                .filter(d => d.tinh_hinh !== 'Bất ổn')
-                .map(d => {
-                    const prev = prevMap.get(d.kho_giao_id);
-                    
-                    // Chỉ số 1: BL Aging >5 ngày tăng mạnh
-                    const agingGrowth = prev ? (d.bl_aging - prev.bl_aging) : 0;
-                    const ind1_base = Math.min(15, d.bl_aging * 1.5);
-                    const ind1_growth = agingGrowth > 0 ? Math.min(20, agingGrowth * 3) : (!prev ? Math.min(20, d.bl_aging * 2) : 0);
-                    const ind1 = ind1_base + ind1_growth;
-                    
-                    // Chỉ số 2: GTC tb 7 ngày thấp hơn nhiều so với Tạo tb 7 ngày
-                    const gap = Math.max(0, d.tao_avg - d.gtc_avg);
-                    const deficitPct = d.gtc_avg > 0 ? (gap / d.gtc_avg) : (gap > 0 ? 1 : 0);
-                    const ind2 = Math.min(30, deficitPct * 25) + Math.min(5, gap * 0.05);
-                    
-                    // Chỉ số 3: Tồn LM đang tăng và vượt nhiều so với GTC
-                    const lmGrowth = prev ? (d.bl_lm - prev.bl_lm) : 0;
-                    const ratioExceeds = d.bl_lm / Math.max(1, d.gtc_avg);
-                    const ind3_growth = lmGrowth > 0 ? Math.min(10, lmGrowth * 0.2) : 0;
-                    const ind3_ratio = Math.min(20, Math.max(0, ratioExceeds - 1) * 8);
-                    const ind3 = ind3_growth + ind3_ratio;
-                    
-                    const earlyWarningScore = Math.min(100, Math.round(ind1 + ind2 + ind3));
-                    
-                    return {
-                        ...d,
-                        earlyWarningScore,
-                        ind1, ind2, ind3,
-                        agingGrowth,
-                        lmGrowth,
-                        ratioExceeds
-                    };
-                })
-                .sort((a, b) => b.earlyWarningScore - a.earlyWarningScore)
-                .slice(0, 10);
+            // Lấy dữ liệu tuần trước (7 ngày trước) để so sánh diện rộng
+            const prev7DateStr = dateIdx >= 7 ? sortedDates[dateIdx - 7] : null;
+            const prev7Filtered = prev7DateStr ? rawData.filter(d => d.dateStr === prev7DateStr && (region === 'All' || d.vung_giao === region) && (type === 'All' || d.warehouse_type === type)) : [];
+            const prev7Map = new Map(prev7Filtered.map(d => [d.kho_giao_id, d]));
 
-            const ctxEarly = document.getElementById('c-early-warning').getContext('2d');
-            if (charts.warning) charts.warning.destroy();
-            if (!atRiskStable.length) {
-                charts.warning = new Chart(ctxEarly, { type: 'bar', data: { labels: ['Không có dữ liệu'], datasets: [{ data: [0] }] }, options: { responsive: true, maintainAspectRatio: false } });
-            } else {
-                charts.warning = new Chart(ctxEarly, {
-                    type: 'bar',
-                    data: {
-                        labels: atRiskStable.map(d => wrapTextToArray(shortenPOName(d.kho_giao_name), 8)),
-                        datasets: [
-                            {
-                                label: 'Tồn LM ≤ 5 ngày',
-                                data: atRiskStable.map(d => d.bl_lm - d.bl_aging),
-                                backgroundColor: 'rgba(213, 108, 54, 0.45)',
-                                borderColor: '#D56C36',
-                                borderWidth: 1,
-                                stack: 'stack1',
-                                datalabels: {
-                                    display: true,
-                                    align: 'center',
-                                    anchor: 'center',
-                                    color: '#FFF',
-                                    font: { family: 'JetBrains Mono', size: 9, weight: 'bold' },
-                                    formatter: val => val > 0 ? val.toLocaleString() : ''
-                                }
-                            },
-                            {
-                                label: 'Tồn LM > 5 ngày (Aging)',
-                                data: atRiskStable.map(d => d.bl_aging),
-                                backgroundColor: 'rgba(239, 68, 68, 0.75)',
-                                borderColor: '#EF4444',
-                                borderWidth: 1,
-                                stack: 'stack1',
-                                datalabels: {
-                                    display: true,
-                                    align: 'center',
-                                    anchor: 'center',
-                                    color: '#FFF',
-                                    font: { family: 'JetBrains Mono', size: 9, weight: 'bold' },
-                                    formatter: val => val > 0 ? val.toLocaleString() : ''
-                                }
-                            },
-                            {
-                                label: 'Giao TC TB 7 ngày',
-                                data: atRiskStable.map(d => d.gtc_avg),
-                                type: 'line',
-                                borderColor: '#3B82F6',
-                                backgroundColor: 'rgba(59, 130, 246, 0.2)',
-                                borderWidth: 2.5,
-                                tension: 0.3,
-                                pointRadius: 4,
-                                pointBackgroundColor: '#3B82F6',
-                                datalabels: {
-                                    display: true,
-                                    align: 'top',
-                                    anchor: 'end',
-                                    color: '#3B82F6',
-                                    backgroundColor: 'rgba(9, 13, 22, 0.85)',
-                                    borderRadius: 3,
-                                    padding: 2,
-                                    font: { family: 'JetBrains Mono', size: 8, weight: 'bold' },
-                                    formatter: val => val > 0 ? val.toLocaleString() : ''
-                                }
-                            }
-                        ]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        plugins: {
-                            legend: {
-                                display: true,
-                                labels: { color: '#F1F5F9', font: { family: 'JetBrains Mono', size: 9 } }
-                            },
-                            tooltip: {
-                                callbacks: {
-                                    label: (ctx) => {
-                                        const d = atRiskStable[ctx.dataIndex];
-                                        if (ctx.datasetIndex === 0) {
-                                            return `• Tồn LM ≤ 5 ngày: ${(d.bl_lm - d.bl_aging).toLocaleString()} đơn`;
-                                        } else if (ctx.datasetIndex === 1) {
-                                            return `• Tồn LM > 5 ngày: ${d.bl_aging.toLocaleString()} đơn`;
-                                        } else {
-                                            return `• Giao TC TB 7 ngày: ${d.gtc_avg.toLocaleString()} đơn/ngày (Thâm hụt vs Tạo mới: ${Math.max(0, d.tao_avg - d.gtc_avg).toLocaleString()} đơn)`;
-                                        }
-                                    }
-                                }
-                            }
-                        },
-                        scales: {
-                            x: {
-                                stacked: true,
-                                grid: { color: '#21262D' },
-                                ticks: { color: '#FFF', font: { family: 'JetBrains Mono', size: 9 }, maxRotation: 0, minRotation: 0 }
-                            },
-                            y: {
-                                stacked: true,
-                                grid: { color: '#21262D' },
-                                ticks: { color: '#94A3B8', font: { family: 'JetBrains Mono', size: 9 } },
-                                title: { display: true, text: 'Số lượng đơn hàng', color: '#94A3B8', font: { family: 'Outfit', size: 10 } }
-                            }
-                        }
-                    }
-                });
-            }
-
-            // === Chart 5: Dự báo - Bưu cục ổn định đang xấu đi (so hôm qua) ===
             const ctxForecast = document.getElementById('c-forecast-warning').getContext('2d');
             if (charts.forecast) charts.forecast.destroy();
 
@@ -660,6 +527,11 @@
                 .map(d => {
                     const prev = prevMap.get(d.kho_giao_id);
                     if (!prev) return null;
+                    
+                    // So sánh với tuần trước (7 ngày trước)
+                    const prev7 = prev7Map.get(d.kho_giao_id);
+                    const lmDelta7 = prev7 ? (d.bl_lm - prev7.bl_lm) : 0;
+                    const agingDelta7 = prev7 ? (d.bl_aging - prev7.bl_aging) : 0;
                     
                     // 1. Aging > 5 ngày tăng mạnh
                     const agingDelta = d.bl_aging - prev.bl_aging;
@@ -692,7 +564,9 @@
                         todayGap,
                         gapDelta,
                         ratioExceeds: todayRatio,
-                        deterioratingScore 
+                        deterioratingScore,
+                        lmDelta7,
+                        agingDelta7
                     };
                 })
                 .filter(d => d !== null && d.deterioratingScore > 0)
@@ -741,11 +615,13 @@
                             callbacks: {
                                 label: (ctx) => {
                                     const d = deteriorating[ctx.dataIndex];
+                                    const lmWeekText = d.lmDelta7 !== 0 ? ` (${d.lmDelta7 > 0 ? '▲+' : '▼'}${d.lmDelta7} vs tuần trước)` : '';
+                                    const agingWeekText = d.agingDelta7 !== 0 ? ` (${d.agingDelta7 > 0 ? '▲+' : '▼'}${d.agingDelta7} vs tuần trước)` : '';
                                     return [
                                         `Chỉ số xấu đi: ${Math.round(d.deterioratingScore)} pts`,
-                                        `• Aging >5N tăng: ${d.bl_aging} (▲+${d.agingDelta} vs hôm qua)`,
+                                        `• Aging >5N: ${d.bl_aging} (▲+${d.agingDelta} vs hôm qua)${agingWeekText}`,
                                         `• Chênh lệch Tạo-GTC: ${d.todayGap} (▲+${d.gapDelta} vs hôm qua)`,
-                                        `• Tồn LM tăng: ${d.bl_lm} (▲+${d.lmDelta} vs hôm qua, vượt ${d.ratioExceeds.toFixed(1)}x GTC)`
+                                        `• Tồn LM: ${d.bl_lm} (▲+${d.lmDelta} vs hôm qua, vượt ${d.ratioExceeds.toFixed(1)}x GTC)${lmWeekText}`
                                     ];
                                 }
                             }
